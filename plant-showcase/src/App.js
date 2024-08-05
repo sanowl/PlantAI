@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useAnimation, useMotionValue, useTransform, useSpring, useMotionTemplate, useViewportScroll } from 'framer-motion';
-import { Leaf, Search, Droplet, Sun, Wind, Thermometer, Info, X, ChevronLeft, ChevronRight, Calendar, Star, AlertCircle, Shuffle, Filter, ArrowUpDown, Moon, CloudRain, Zap, Heart, Shield } from 'lucide-react';
+import { motion, AnimatePresence, useAnimation, useSpring, useTransform, useMotionTemplate } from 'framer-motion';
+import { Leaf, Search, Droplet, Sun, Wind, Thermometer, Info, X, ChevronLeft, ChevronRight, Calendar, Star, AlertCircle, Shuffle, ArrowUpDown, Moon } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
-import { rgba, darken, lighten } from 'polished';
 
 const plants = [
   { id: 1, name: 'Monstera Deliciosa', care: 'Medium water, bright indirect light', color: 'from-green-400 to-blue-500', icon: '🌿', waterNeeds: 2, lightNeeds: 3, humidity: 60, temperature: '18-30', description: 'Known for its large, glossy leaves with natural holes, the Monstera is a statement piece in any room.', difficulty: 'Intermediate', lastWatered: '2023-05-10', rating: 4.5 },
@@ -21,14 +20,11 @@ const ProgressBar = ({ value, max, color }) => {
   }, [value, springValue]);
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
+    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
       <motion.div 
         className={`h-2.5 rounded-full ${color}`} 
         style={{ width: springValue.to(v => `${(v / max) * 100}%`) }}
-        initial={{ x: "-100%" }}
-        animate={{ x: 0 }}
-        transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      />
+      ></motion.div>
     </div>
   );
 };
@@ -66,7 +62,7 @@ const StarRating = ({ rating }) => {
         </motion.div>
       )}
       <motion.span 
-        className="ml-2 text-sm text-gray-600 dark:text-gray-300"
+        className="ml-2 text-sm text-gray-600"
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.6 }}
@@ -77,7 +73,7 @@ const StarRating = ({ rating }) => {
   );
 };
 
-const PlantCard = React.memo(({ plant, onClick, isVisible, theme }) => {
+const PlantCard = React.memo(({ plant, onClick, isVisible }) => {
   const controls = useAnimation();
   const [ref, inView] = useInView({
     threshold: 0.1,
@@ -107,11 +103,6 @@ const PlantCard = React.memo(({ plant, onClick, isVisible, theme }) => {
         className={`bg-gradient-to-br ${plant.color} p-6 rounded-2xl shadow-lg cursor-pointer overflow-hidden transform transition-all duration-300 hover:shadow-2xl`}
         onClick={() => onClick(plant)}
         animate={hovered ? { y: -5 } : { y: 0 }}
-        style={{
-          boxShadow: hovered
-            ? `0 20px 25px -5px ${rgba(theme === 'light' ? '#000000' : '#ffffff', 0.1)}, 0 10px 10px -5px ${rgba(theme === 'light' ? '#000000' : '#ffffff', 0.04)}`
-            : `0 4px 6px -1px ${rgba(theme === 'light' ? '#000000' : '#ffffff', 0.1)}, 0 2px 4px -1px ${rgba(theme === 'light' ? '#000000' : '#ffffff', 0.06)}`,
-        }}
       >
         <motion.div
           className="absolute top-2 right-2 text-4xl"
@@ -146,9 +137,9 @@ const PlantCard = React.memo(({ plant, onClick, isVisible, theme }) => {
   );
 });
 
-const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
+const PlantModal = ({ plant, onClose, onPrevious, onNext }) => {
   const [activeTab, setActiveTab] = useState('info');
-  const x = useMotionValue(0);
+  const x = useSpring(0, { stiffness: 100, damping: 30 });
   const opacity = useTransform(x, [-100, 0, 100], [0, 1, 0]);
 
   const tabs = [
@@ -179,13 +170,13 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 20, stiffness: 300 }}
-        className={`${theme === 'light' ? 'bg-white' : 'bg-gray-800'} rounded-2xl max-w-md w-full p-8 relative overflow-hidden shadow-2xl`}
+        className="bg-white rounded-2xl max-w-md w-full p-8 relative overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${plant.color} opacity-20`}></div>
         <motion.button
           onClick={onClose}
-          className={`absolute top-4 right-4 ${theme === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-300 hover:text-gray-100'} bg-white dark:bg-gray-700 rounded-full p-2 shadow-md transition-all duration-200 hover:scale-110`}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-md transition-all duration-200 hover:scale-110"
           whileHover={{ rotate: 90 }}
           whileTap={{ scale: 0.9 }}
         >
@@ -206,7 +197,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
           </motion.span>
           <div>
             <motion.h2 
-              className={`text-3xl font-bold relative ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}
+              className="text-3xl font-bold relative"
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -214,7 +205,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
               {plant.name}
             </motion.h2>
             <motion.p 
-              className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}
+              className="text-sm text-gray-600"
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -232,7 +223,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
               className={`flex-1 py-2 px-4 rounded-full transition-colors duration-200 ${
                 activeTab === tab.id
                   ? `bg-${plant.color.split('-')[1]} text-white`
-                  : theme === 'light' ? 'bg-gray-200 text-gray-700' : 'bg-gray-700 text-gray-200'
+                  : 'bg-gray-200 text-gray-700'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -257,21 +248,21 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <p className={`mb-4 ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}>{plant.description}</p>
+              <p className="mb-4 text-gray-600">{plant.description}</p>
               <div className="flex justify-between items-center mb-4">
                 <motion.div 
                   className="flex items-center"
                   whileHover={{ scale: 1.1 }}
                 >
-                  <Wind className={theme === 'light' ? 'text-blue-500' : 'text-blue-400'} size={20} />
-                  <span className={`ml-2 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>Humidity: {plant.humidity}%</span>
+                  <Wind className="text-blue-500 mr-2" />
+                  <span>Humidity: {plant.humidity}%</span>
                 </motion.div>
                 <motion.div 
                   className="flex items-center"
                   whileHover={{ scale: 1.1 }}
                 >
-                  <Thermometer className={theme === 'light' ? 'text-red-500' : 'text-red-400'} size={20} />
-                  <span className={`ml-2 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>Temp: {plant.temperature}°C</span>
+                  <Thermometer className="text-red-500 mr-2" />
+                  <span>Temp: {plant.temperature}°C</span>
                 </motion.div>
               </div>
               <div className="mt-4">
@@ -290,21 +281,21 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
               <div className="space-y-4 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className={`text-base font-medium ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>Water Needs</span>
-                    <span className={`text-sm font-medium ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>{plant.waterNeeds}/3</span>
+                    <span className="text-base font-medium text-blue-700 dark:text-white">Water Needs</span>
+                    <span className="text-sm font-medium text-blue-700 dark:text-white">{plant.waterNeeds}/3</span>
                   </div>
-                  <ProgressBar value={plant.waterNeeds} max={3} color={theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'} />
+                  <ProgressBar value={plant.waterNeeds} max={3} color="bg-blue-600" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className={`text-base font-medium ${theme === 'light' ? 'text-yellow-700' : 'text-yellow-400'}`}>Light Needs</span>
-                    <span className={`text-sm font-medium ${theme === 'light' ? 'text-yellow-700' : 'text-yellow-400'}`}>{plant.lightNeeds}/3</span>
+                    <span className="text-base font-medium text-yellow-700 dark:text-white">Light Needs</span>
+                    <span className="text-sm font-medium text-yellow-700 dark:text-white">{plant.lightNeeds}/3</span>
                   </div>
-                  <ProgressBar value={plant.lightNeeds} max={3} color={theme === 'light' ? 'bg-yellow-400' : 'bg-yellow-500'} />
+                  <ProgressBar value={plant.lightNeeds} max={3} color="bg-yellow-400" />
                 </div>
               </div>
               <motion.p 
-                className={theme === 'light' ? 'text-gray-600' : 'text-gray-300'}
+                className="text-gray-600"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -326,14 +317,14 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
                   className="flex items-center justify-between"
                   whileHover={{ scale: 1.05 }}
                 >
-                  <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-300'}>Difficulty:</span>
+                  <span className="text-gray-600">Difficulty:</span>
                   <span className="font-semibold">{plant.difficulty}</span>
                 </motion.div>
                 <motion.div 
                   className="flex items-center justify-between"
                   whileHover={{ scale: 1.05 }}
                 >
-                  <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-300'}>Last Watered:</span>
+                  <span className="text-gray-600">Last Watered:</span>
                   <span className="font-semibold flex items-center">
                     <Calendar size={16} className="mr-1" />
                     {plant.lastWatered}
@@ -343,7 +334,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
                   className="flex items-center justify-between"
                   whileHover={{ scale: 1.05 }}
                 >
-                  <span className={theme === 'light' ? 'text-gray-600' : 'text-gray-300'}>Rating:</span>
+                  <span className="text-gray-600">Rating:</span>
                   <StarRating rating={plant.rating} />
                 </motion.div>
               </div>
@@ -354,7 +345,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
         <div className="flex justify-between mt-6">
           <motion.button 
             onClick={onPrevious} 
-            className={`${theme === 'light' ? 'bg-gray-200 hover:bg-gray-300' : 'bg-gray-700 hover:bg-gray-600'} p-2 rounded-full transition-colors duration-200`}
+            className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -362,7 +353,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
           </motion.button>
           <motion.button 
             onClick={onNext} 
-            className={`${theme === 'light' ? 'bg-gray-200 hover:bg-gray-300' : 'bg-gray-700 hover:bg-gray-600'} p-2 rounded-full transition-colors duration-200`}
+            className="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -374,8 +365,7 @@ const PlantModal = ({ plant, onClose, onPrevious, onNext, theme }) => {
   );
 };
 
-const MovingBackground = ({ theme }) => {
-  const { scrollYProgress } = useViewportScroll();
+const MovingBackground = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -399,9 +389,8 @@ const MovingBackground = ({ theme }) => {
       className="fixed inset-0 z-[-1]"
       style={{
         background: useMotionTemplate`
-          radial-gradient(600px at ${x}px ${y}px, ${theme === 'light' ? 'rgba(29, 78, 216, 0.15)' : 'rgba(59, 130, 246, 0.15)'}, transparent 80%)
+          radial-gradient(600px at ${x}px ${y}px, rgba(29, 78, 216, 0.15), transparent 80%)
         `,
-        opacity: useTransform(scrollYProgress, [0, 1], [1, 0.5]),
       }}
     />
   );
@@ -486,7 +475,7 @@ const App = () => {
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-gradient-to-br from-green-100 via-blue-100 to-purple-100' : 'bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900'} p-8 relative overflow-hidden transition-colors duration-500`}>
-      <MovingBackground theme={theme} />
+      <MovingBackground />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -590,7 +579,6 @@ const App = () => {
                   plant={plant}
                   onClick={setSelectedPlant}
                   isVisible={visiblePlants.includes(plant.id.toString())}
-                  theme={theme}
                 />
               </motion.div>
             ))}
@@ -603,7 +591,6 @@ const App = () => {
               onClose={() => setSelectedPlant(null)}
               onPrevious={handlePreviousPlant}
               onNext={handleNextPlant}
-              theme={theme}
             />
           )}
         </AnimatePresence>
